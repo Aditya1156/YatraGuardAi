@@ -4,6 +4,69 @@ Running log, per Section 0 of `PROJECT_MASTER_PROMPT.md`. Newest session at the 
 
 ---
 
+## Session 4 — AI failover
+
+### Watch the two "OpenRoute" names `[TEAM NOTE]`
+
+An **OpenRouter** key was supplied in place of the **OpenRouteService** key the
+route planner needs. They are unrelated services with nearly identical names:
+
+| Service | Domain | What it does | Needed for |
+|---|---|---|---|
+| OpenRouteService | `openrouteservice.org` | Maps, directions, geocoding | 8.3 route planning — **still missing** |
+| OpenRouter | `openrouter.ai` | LLM gateway (GPT, Gemma, Claude…) | Optional AI fallback — now wired |
+
+The key needed for 8.3 comes from `openrouteservice.org/dev/#/signup` and looks
+like `5b3ce3597851110001cf6248…`. It is free and needs no card.
+
+### Deviation from the locked stack `[TEAM DECISION]`
+
+Section 3 locks AI to Gemini. OpenRouter is now wired as a **fallback only**,
+at the team's request, for one concrete reason: Gemini's free tier allows 20
+requests/day on the full flash models, and running out mid-session already
+broke a working demo once. Gemini remains the primary and only path when it is
+healthy.
+
+### How it works
+
+`lib/ai/provider.ts` owns the policy. A request that Gemini cannot *serve* —
+`AI_QUOTA`, `AI_UNREACHABLE`, `AI_MODEL_GONE`, `AI_ERROR` — is retried through
+OpenRouter. `AI_BLOCKED` is deliberately excluded: a content refusal is a
+judgement rather than an outage, and retrying it elsewhere would be routing
+around the refusal itself.
+
+The AI layer was restructured to make this honest rather than bolted on:
+
+- `lib/ai/contract.ts` — the request shape and JSON handling both providers share
+- `lib/ai/gemini.ts` / `lib/ai/openrouter.ts` — one provider each, same interface
+- `lib/ai/provider.ts` — failover policy and schema validation
+
+Model is `google/gemma-4-26b-a4b-it:free`, chosen by testing all five free
+vision-capable models on the bill fixture: it was the only one that both
+answered and produced an extraction identical to Gemini's, unit prices included.
+Free models carry their own rate limits, so this is a second chance rather than
+a guarantee.
+
+### Verified
+
+- Failover fires: with `GEMINI_MODEL` pointed at a retired id, the log shows
+  `gemini failed with AI_MODEL_GONE; falling back to openrouter` and the bill
+  still scores 33/100 at ₹210 over — the same answer Gemini gives.
+- Normal path unchanged: with a valid model, zero fallbacks occur.
+- `/api/status` reports `aiFallback` under a new `optional` group, kept out of
+  `configured` so an unset optional key cannot make a working deployment report
+  itself as not ready.
+
+### Still open
+
+- [ ] **OpenRouteService key** — 8.3 remains the one module never run against a
+      live API.
+- [ ] **Firebase** — guest sign-in carries the demo; real sign-in needs it.
+- [ ] Rotate the Gemini and OpenRouter keys — both were pasted into a chat
+      transcript.
+
+---
+
 ## Session 3 — the AI modules run end to end
 
 A second Gemini key was supplied and it works. **All four core modules now run

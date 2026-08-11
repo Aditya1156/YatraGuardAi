@@ -1,11 +1,12 @@
 import 'server-only';
 
-import type { z } from 'zod';
 import { requireGemini, serverEnv } from '@/lib/config';
 import { AppError } from '@/lib/api/respond';
+import type { AiRequest } from './contract';
 
 /**
- * Minimal Gemini client over the REST API.
+ * Minimal Gemini client over the REST API. Primary provider — see provider.ts
+ * for the failover policy.
  *
  * Deliberately not using an SDK: the REST surface is stable, it adds zero
  * dependencies to the serverless bundle, and it keeps the free-tier request
@@ -13,20 +14,6 @@ import { AppError } from '@/lib/api/respond';
  */
 
 const ENDPOINT = 'https://generativelanguage.googleapis.com/v1beta/models';
-
-export interface ImagePart {
-  mimeType: string;
-  /** Raw base64 — no `data:` prefix. */
-  data: string;
-}
-
-interface GeminiRequest {
-  systemInstruction: string;
-  prompt: string;
-  image?: ImagePart;
-  temperature?: number;
-  maxOutputTokens?: number;
-}
 
 interface GeminiCandidate {
   content?: { parts?: { text?: string }[] };
@@ -41,7 +28,7 @@ interface GeminiResponse {
 
 const RETRYABLE = new Set([429, 500, 502, 503, 504]);
 
-async function callGemini(request: GeminiRequest, attempt = 0): Promise<string> {
+export async function callGemini(request: AiRequest, attempt = 0): Promise<string> {
   const apiKey = requireGemini();
   const model = serverEnv.geminiModel;
 
@@ -153,46 +140,3 @@ async function callGemini(request: GeminiRequest, attempt = 0): Promise<string> 
   return text;
 }
 
-/** Strips ``` fences the model occasionally adds despite responseMimeType. */
-function extractJson(raw: string): unknown {
-  const cleaned = raw
-    .trim()
-    .replace(/^```(?:json)?\s*/i, '')
-    .replace(/```$/, '')
-    .trim();
-
-  try {
-    return JSON.parse(cleaned);
-  } catch {
-    const start = cleaned.search(/[[{]/);
-    const end = Math.max(cleaned.lastIndexOf('}'), cleaned.lastIndexOf(']'));
-    if (start >= 0 && end > start) {
-      try {
-        return JSON.parse(cleaned.slice(start, end + 1));
-      } catch {
-        /* fall through to the shared error below */
-      }
-    }
-    throw new AppError('The AI response could not be read. Try again.', 502, 'AI_PARSE');
-  }
-}
-
-/**
- * Calls Gemini and validates the JSON it returns against `schema`.
- *
- * The schema's input type is pinned to `unknown` so `T` is always inferred from
- * the *parsed* shape — otherwise fields with `.default()` come back optional.
- */
-export async function generateJson<T>(
-  request: GeminiRequest,
-  schema: z.ZodType<T, z.ZodTypeDef, unknown>,
-): Promise<T> {
-  const raw = await callGemini(request);
-  const parsed = schema.safeParse(extractJson(raw));
-
-  if (!parsed.success) {
-    console.error('[gemini] schema mismatch', parsed.error.issues.slice(0, 3), raw.slice(0, 400));
-    throw new AppError('The AI returned an unexpected result. Try again.', 502, 'AI_SHAPE');
-  }
-  return parsed.data;
-}

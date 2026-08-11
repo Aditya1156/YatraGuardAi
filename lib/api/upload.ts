@@ -1,5 +1,5 @@
 import { AppError } from './respond';
-import type { ImagePart } from '@/lib/ai/gemini';
+import type { ImagePart } from '@/lib/ai/provider';
 
 /**
  * Reads a photo out of a multipart request for the OCR pipelines (8.1, 8.4).

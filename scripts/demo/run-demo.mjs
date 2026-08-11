@@ -105,6 +105,9 @@ async function main() {
   for (const [name, ready] of Object.entries(status.configured)) {
     console.log(`  ${name.padEnd(15)} ${ready ? green('configured') : dim('not configured')}`);
   }
+  for (const [name, ready] of Object.entries(status.optional ?? {})) {
+    console.log(`  ${name.padEnd(15)} ${ready ? green('configured') : dim('not configured')} ${dim('(optional)')}`);
+  }
   console.log(
     `  seeded          ${status.seed.prices} prices, ${status.seed.riskZones} flagged areas, ${status.seed.dishes} dishes`,
   );

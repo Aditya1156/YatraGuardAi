@@ -178,7 +178,22 @@ curl "https://generativelanguage.googleapis.com/v1beta/models" \
   -H "x-goog-api-key: $GEMINI_API_KEY"
 ```
 
-Two other AI failures have named codes worth recognising:
+### Optional AI fallback
+
+`OPENROUTER_API_KEY` is optional. When set, a request that Gemini cannot serve
+— quota exhausted, model retired, service unreachable — is retried through
+OpenRouter instead of failing. Content refusals (`AI_BLOCKED`) are **not**
+retried: that is a judgement, not an outage, and routing around it would be
+circumventing a refusal rather than a failure.
+
+Leave it blank and the app runs on Gemini alone.
+
+> **Not the same service as OpenRouteService.** OpenRouter (`openrouter.ai`) is
+> an LLM gateway. OpenRouteService (`openrouteservice.org`) does maps and
+> directions and is what the route planner needs. The names are almost
+> identical and the keys are not interchangeable.
+
+Named AI failure codes worth recognising:
 
 | Code | Means |
 |---|---|

@@ -47,6 +47,17 @@ export const serverEnv = {
    */
   geminiModel: read('GEMINI_MODEL') ?? 'gemini-3.1-flash-lite',
 
+  /**
+   * Optional fallback AI provider, used only when Gemini cannot serve a
+   * request (see lib/ai/provider.ts). Note the name: OpenRouter is an LLM
+   * gateway and has nothing to do with OpenRouteService below, which does
+   * maps and directions. The similarity is unfortunate and has already caused
+   * one mix-up.
+   */
+  openRouterApiKey: read('OPENROUTER_API_KEY'),
+  openRouterModel: read('OPENROUTER_MODEL') ?? 'google/gemma-4-26b-a4b-it:free',
+
+  /** Directions and geocoding for 8.3 — nothing to do with OpenRouter above. */
   openRouteServiceKey: read('OPENROUTESERVICE_API_KEY'),
 
   firebaseProjectId: read('FIREBASE_PROJECT_ID'),
@@ -82,6 +93,9 @@ export const integrations = {
   },
   get gemini() {
     return Boolean(serverEnv.geminiApiKey);
+  },
+  get aiFallback() {
+    return Boolean(serverEnv.openRouterApiKey);
   },
   get routing() {
     return Boolean(serverEnv.openRouteServiceKey);

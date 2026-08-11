@@ -23,6 +23,13 @@ export const GET = route(async (): Promise<NextResponse> => {
     firebaseClient: integrations.firebaseClient,
   };
 
+  // Reported separately because `ready` below requires everything in
+  // `configured` — an optional integration listed there would make a fully
+  // working deployment report itself as not ready.
+  const optional = {
+    aiFallback: integrations.aiFallback,
+  };
+
   let seed: { prices: number; riskZones: number; dishes: number } | null = null;
   let databaseReachable = false;
 
@@ -43,5 +50,5 @@ export const GET = route(async (): Promise<NextResponse> => {
 
   const ready = Object.values(configured).every(Boolean) && databaseReachable && (seed?.prices ?? 0) > 0;
 
-  return ok({ city: PILOT_CITY, configured, databaseReachable, seed, ready });
+  return ok({ city: PILOT_CITY, configured, optional, databaseReachable, seed, ready });
 });

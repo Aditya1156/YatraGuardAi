@@ -1,7 +1,7 @@
 import 'server-only';
 
 import { z } from 'zod';
-import { generateJson, type ImagePart } from './gemini';
+import { generateJson, type ImagePart } from './provider';
 import {
   buildResult,
   applyRules,
