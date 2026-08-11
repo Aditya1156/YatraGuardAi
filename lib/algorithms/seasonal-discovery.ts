@@ -56,14 +56,53 @@ export function suggestOffPeak(
     }));
 }
 
+/**
+ * Renders a set of peak months readably.
+ *
+ * Peak seasons are usually a contiguous run that wraps the year end
+ * (October–January), so those collapse to a range. Anything genuinely split —
+ * Mysuru peaks for Dasara and again in winter — stays an explicit list rather
+ * than being flattened into a range that would misstate it.
+ */
+export function formatMonths(months: number[]): string {
+  const unique = Array.from(new Set(months)).sort((a, b) => a - b);
+  if (unique.length === 0) return '';
+  if (unique.length === 1) return monthName(unique[0]!);
+  if (unique.length === 12) return 'all year';
+
+  // Rotate so the list starts at the beginning of a run. Without this a
+  // December–January season would be split across the ends of the array.
+  let start = 0;
+  for (let i = 0; i < unique.length; i += 1) {
+    const previous = unique[(i - 1 + unique.length) % unique.length]!;
+    if ((unique[i]! - previous + 12) % 12 !== 1) start = i;
+  }
+  const rotated = [...unique.slice(start), ...unique.slice(0, start)];
+
+  // Split into contiguous runs, so a genuinely two-season place reads as two
+  // ranges rather than one long comma list.
+  const runs: number[][] = [];
+  for (const month of rotated) {
+    const current = runs.at(-1);
+    if (current && (month - current.at(-1)! + 12) % 12 === 1) current.push(month);
+    else runs.push([month]);
+  }
+
+  const parts = runs.map((run) =>
+    run.length === 1 ? monthName(run[0]!) : `${monthName(run[0]!)} to ${monthName(run.at(-1)!)}`,
+  );
+
+  if (parts.length === 1) return parts[0]!;
+  return `${parts.slice(0, -1).join(', ')} and ${parts.at(-1)}`;
+}
+
 function buildReason(destination: DestinationRecord, month: number): string {
-  const peak = destination.peakMonths.map(monthName);
   const base = destination.blurb?.trim();
 
   const timing =
-    peak.length === 0
+    destination.peakMonths.length === 0
       ? `Steady year-round, so ${monthName(month)} is as good as any.`
-      : `Peaks in ${peak.slice(0, 2).join(' and ')}${peak.length > 2 ? ' and after' : ''}, so ${monthName(month)} is quieter and cheaper.`;
+      : `Peaks ${formatMonths(destination.peakMonths)}, so ${monthName(month)} is quieter and cheaper.`;
 
   return base ? `${base} ${timing}` : timing;
 }

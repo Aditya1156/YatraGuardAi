@@ -1,5 +1,3 @@
-'use client';
-
 import * as React from 'react';
 import { AlertTriangle, Info, type LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -8,6 +6,13 @@ import { Button } from './button';
 /**
  * Empty, error and loading states. Section 10 (Week 4) requires every screen to
  * have these written in the app's voice — plain, specific, never blaming the user.
+ *
+ * Deliberately NOT marked 'use client'. These are shared components: server
+ * pages (/alerts, /discover) pass a Lucide `icon` here, and a component
+ * reference cannot cross a client boundary — marking this file 'use client'
+ * makes those pages fail to render with "Functions cannot be passed directly to
+ * Client Components". Nothing here uses hooks, so it compiles correctly on both
+ * sides; `ErrorState`'s onRetry is only ever supplied by a client caller.
  */
 
 export function EmptyState({
