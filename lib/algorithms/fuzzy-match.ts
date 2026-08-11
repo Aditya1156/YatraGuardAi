@@ -34,6 +34,20 @@ export function levenshtein(a: string, b: string): number {
   return previous[b.length] ?? 0;
 }
 
+/**
+ * Two tokens count as the same word if they are within a small edit distance.
+ *
+ * Exact set intersection is useless here: "dose" is the standard Kannada
+ * spelling of "dosa" and "masaala" is a common transliteration of "masala".
+ * Requiring an exact token match would score those pairs at zero overlap and
+ * sink an otherwise obvious match.
+ */
+function tokensMatch(a: string, b: string): boolean {
+  if (a === b) return true;
+  const tolerance = Math.max(a.length, b.length) >= 6 ? 2 : 1;
+  return levenshtein(a, b) <= tolerance;
+}
+
 /** 0–1 similarity combining edit distance, token overlap and substring hits. */
 export function similarity(a: string, b: string): number {
   const left = normalizeName(a);
@@ -44,11 +58,24 @@ export function similarity(a: string, b: string): number {
   const distance = levenshtein(left, right);
   const editScore = 1 - distance / Math.max(left.length, right.length);
 
-  const leftTokens = new Set(left.split(' ').filter((t) => t.length > 2));
-  const rightTokens = new Set(right.split(' ').filter((t) => t.length > 2));
+  const leftTokens = left.split(' ').filter((t) => t.length > 2);
+  const rightTokens = right.split(' ').filter((t) => t.length > 2);
+
+  // Greedy pairing: each right-hand token can only be claimed once, so
+  // "dosa dosa" cannot inflate its overlap against a single "dosa".
+  const claimed = new Array<boolean>(rightTokens.length).fill(false);
   let shared = 0;
-  for (const token of leftTokens) if (rightTokens.has(token)) shared += 1;
-  const union = new Set([...leftTokens, ...rightTokens]).size;
+  for (const token of leftTokens) {
+    const index = rightTokens.findIndex(
+      (candidate, i) => !claimed[i] && tokensMatch(token, candidate),
+    );
+    if (index >= 0) {
+      claimed[index] = true;
+      shared += 1;
+    }
+  }
+
+  const union = leftTokens.length + rightTokens.length - shared;
   const tokenScore = union > 0 ? shared / union : 0;
 
   // "dosa" inside "masala dosa" is a strong signal edit distance alone misses.

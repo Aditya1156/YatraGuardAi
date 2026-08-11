@@ -31,7 +31,14 @@ export const serverEnv = {
   mongodbDb: read('MONGODB_DB') ?? 'yatraguard',
 
   geminiApiKey: read('GEMINI_API_KEY'),
-  geminiModel: read('GEMINI_MODEL') ?? 'gemini-2.0-flash',
+  /**
+   * Pinned deliberately. Google retires model ids on a schedule — the original
+   * `gemini-2.0-flash` this project was specified against is already gone — so
+   * the id lives in one place and the failure is a clear message rather than a
+   * mystery 404. `gemini-flash-latest` is the auto-updating alias if you would
+   * rather not pin.
+   */
+  geminiModel: read('GEMINI_MODEL') ?? 'gemini-2.5-flash',
 
   openRouteServiceKey: read('OPENROUTESERVICE_API_KEY'),
 

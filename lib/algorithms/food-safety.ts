@@ -1,5 +1,3 @@
-import { z } from 'zod';
-import { generateJson, type ImagePart } from '@/lib/ai/gemini';
 import { bestMatch } from '@/lib/algorithms/fuzzy-match';
 import { normalizeName } from '@/lib/utils';
 import {
@@ -15,47 +13,11 @@ import {
  *
  * Menu photo → dish names (same OCR pipeline shape as 8.1) → fuzzy match
  * against the curated AllergenItem list → cross-reference the user's profile.
+ * Pure, like 8.1: the OCR call lives in lib/ai/extract.ts.
  *
  * Design rule from the master prompt: a flagged dish always names the specific
  * allergen. "Risky" alone is useless to someone with a peanut allergy.
  */
-
-const MENU_SYSTEM_PROMPT = `You read photographed Indian restaurant menus and food boards.
-Return every dish name you can read, in the order printed.
-
-Rules:
-- Dish names only — no prices, no section headers like "STARTERS", no descriptions.
-- Keep regional spellings exactly as printed (e.g. "Dose", "Bisi Bele Bath").
-- If the image is not a menu, return an empty dishes array.
-- Never invent dishes.`;
-
-const menuSchema = z.object({
-  dishes: z.array(z.string().min(1).max(120)).max(80),
-  readable: z.boolean().optional(),
-});
-
-export async function extractDishNames(image: ImagePart): Promise<string[]> {
-  const result = await generateJson(
-    {
-      systemInstruction: MENU_SYSTEM_PROMPT,
-      prompt:
-        'List the dishes on this menu. Respond as JSON: {"dishes":[string],"readable":boolean}',
-      image,
-      temperature: 0,
-    },
-    menuSchema,
-  );
-
-  const seen = new Set<string>();
-  return result.dishes
-    .map((dish) => dish.trim())
-    .filter((dish) => {
-      const key = normalizeName(dish);
-      if (!key || seen.has(key)) return false;
-      seen.add(key);
-      return true;
-    });
-}
 
 /* ------------------------- Allergen inference ---------------------------- */
 

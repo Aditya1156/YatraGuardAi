@@ -5,7 +5,7 @@ import { LIMITS, enforceRateLimit } from '@/lib/api/rate-limit';
 import { requireSessionUser } from '@/lib/auth/session';
 import { connectToDatabase } from '@/lib/db/mongoose';
 import { ScamReportModel } from '@/lib/db/models';
-import { classifyMessage } from '@/lib/algorithms/scam-detector';
+import { classifyMessage } from '@/lib/ai/extract';
 import type { ScamCheckResult } from '@/types';
 
 export const runtime = 'nodejs';

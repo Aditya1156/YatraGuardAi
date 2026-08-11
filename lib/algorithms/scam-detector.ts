@@ -1,27 +1,19 @@
 import { z } from 'zod';
-import { generateJson } from '@/lib/ai/gemini';
 import { clamp } from '@/lib/utils';
 import { trustLevelFor, type ScamCategory, type ScamCheckResult } from '@/types';
 
 /**
  * 8.2 Scam Detector.
  *
- * Pasted message → Gemini classification → score → Trust Ring. A small local
- * rule pass runs first so the obvious cases (OTP requests, lottery wins,
- * lookalike UPI handles) are caught even when the AI is unavailable or hedging.
+ * Pasted message → classification → score → Trust Ring. A local rule pass runs
+ * alongside the AI verdict so the obvious cases (OTP requests, lottery wins,
+ * lookalike UPI handles) are caught even when the model hedges.
+ *
+ * Pure, like 8.1 and 8.4 — the Gemini call lives in lib/ai/extract.ts and hands
+ * its parsed output to `buildResult` here.
  */
 
-const SYSTEM_PROMPT = `You classify messages received by tourists in India as scam, suspicious or safe.
-
-Typical Indian scams to weigh heavily: OTP/PIN requests, KYC-expiry threats, fake
-courier/customs fees, lottery or prize wins, fake police/FedEx/TRAI calls, UPI
-"refund" requests that actually collect money, job-offer advance fees, fake hotel
-or cab booking confirmations, and shortened links to non-official domains.
-
-Judge the message itself, not the sender. Explain in one plain sentence a tired
-traveller would understand. Never tell the user to comply with the message.`;
-
-const classificationSchema = z.object({
+export const classificationSchema = z.object({
   category: z.enum(['safe', 'suspicious', 'scam']),
   confidence: z.number().min(0).max(1),
   explanation: z.string().min(1).max(400),
@@ -122,32 +114,6 @@ export function buildResult(
     signals,
     recommendedAction: ACTION[category],
   };
-}
-
-export async function classifyMessage(
-  text: string,
-): Promise<{ result: ScamCheckResult; pattern: string }> {
-  const ruleHits = applyRules(text);
-
-  const classification = await generateJson(
-    {
-      systemInstruction: SYSTEM_PROMPT,
-      prompt: `Classify this message a traveller received.
-
-Respond as JSON:
-{"category":"safe|suspicious|scam","confidence":0-1,"explanation":"one sentence","signals":["short phrase"],"pattern":"3-6 word label for this scam type"}
-
-Message:
-"""
-${text.slice(0, 4000)}
-"""`,
-      temperature: 0.1,
-      maxOutputTokens: 512,
-    },
-    classificationSchema,
-  );
-
-  return { result: buildResult(classification, ruleHits), pattern: classification.pattern };
 }
 
 /** Normalised grouping key so repeat reports roll into one city alert. */

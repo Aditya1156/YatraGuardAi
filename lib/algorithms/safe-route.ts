@@ -133,9 +133,18 @@ export function assessRouteRisk(
 
 /* ------------------------------ Cost model ------------------------------- */
 
+/**
+ * `safest` weights risk heavily enough to actually dominate.
+ *
+ * An earlier 0.35/0.65 split looked reasonable but failed in practice: because
+ * time is normalised across the candidates, the slowest option always pays the
+ * full time penalty, so a detour that genuinely halved risk still lost. If the
+ * "safest" option can come back as the risky one, the toggle is a lie — risk
+ * has to outweigh time by enough that a real detour wins.
+ */
 export const WEIGHTS = {
   fastest: { time: 1, risk: 0 },
-  safest: { time: 0.35, risk: 0.65 },
+  safest: { time: 0.15, risk: 0.85 },
 } as const;
 
 /** `edgeCost = w1 * normalizedTime + w2 * riskScore` (master prompt 8.3 step 2). */

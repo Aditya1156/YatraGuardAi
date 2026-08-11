@@ -1,5 +1,3 @@
-import { z } from 'zod';
-import { generateJson, type ImagePart } from '@/lib/ai/gemini';
 import { bestMatch } from '@/lib/algorithms/fuzzy-match';
 import { clamp, formatRupees, normalizeName } from '@/lib/utils';
 import { trustLevelFor, type PriceCategory, type PriceCheckResult, type PriceLineItem } from '@/types';
@@ -7,63 +5,18 @@ import { trustLevelFor, type PriceCategory, type PriceCheckResult, type PriceLin
 /**
  * 8.1 Price Fairness Engine.
  *
- * Bill photo → Gemini OCR → fuzzy match against PriceReference → deviation →
- * Trust Ring score. Pure functions here; the API route owns I/O and persistence.
+ * Bill photo → OCR → fuzzy match against PriceReference → deviation → Trust
+ * Ring score. This module owns everything after the OCR: it is pure, has no
+ * dependency on the AI client or the database, and can be run without a key.
+ * The Gemini call that produces `ExtractedItem[]` lives in lib/ai/extract.ts.
  */
 
-/* ------------------------------- OCR step -------------------------------- */
-
-const OCR_SYSTEM_PROMPT = `You read photographed Indian restaurant bills, shop receipts and price boards.
-Return ONLY the line items a customer was charged for.
-
-Rules:
-- Prices are Indian Rupees. Strip currency symbols and thousands separators.
-- Ignore subtotals, taxes, service charge, discounts, totals and change.
-- Keep the item name exactly as printed, minus quantity prefixes.
-- If a line has a quantity, set "quantity" and report "price" as the UNIT price.
-- If the image is not a bill or price list, return an empty items array.
-- Never invent items you cannot actually read.`;
-
-const ocrSchema = z.object({
-  items: z
-    .array(
-      z.object({
-        name: z.string().min(1).max(120),
-        price: z.number().nonnegative().max(1_000_000),
-        quantity: z.number().positive().max(100).optional(),
-      }),
-    )
-    .max(60),
-  currency: z.string().optional(),
-  readable: z.boolean().optional(),
-});
-
+/** One line the OCR step read off the bill. */
 export interface ExtractedItem {
   name: string;
   price: number;
   quantity: number;
 }
-
-export async function extractBillItems(image: ImagePart): Promise<ExtractedItem[]> {
-  const result = await generateJson(
-    {
-      systemInstruction: OCR_SYSTEM_PROMPT,
-      prompt:
-        'Extract the charged line items from this bill. Respond as JSON: {"items":[{"name":string,"price":number,"quantity":number}],"readable":boolean}',
-      image,
-      temperature: 0,
-    },
-    ocrSchema,
-  );
-
-  return result.items.map((item) => ({
-    name: item.name.trim(),
-    price: item.price,
-    quantity: item.quantity ?? 1,
-  }));
-}
-
-/* ---------------------------- Scoring step ------------------------------- */
 
 export interface ReferencePrice {
   itemName: string;

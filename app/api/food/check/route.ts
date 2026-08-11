@@ -5,9 +5,9 @@ import { readImageFromRequest } from '@/lib/api/upload';
 import { requireSessionUser } from '@/lib/auth/session';
 import { connectToDatabase } from '@/lib/db/mongoose';
 import { AllergenItemModel } from '@/lib/db/models';
+import { extractDishNames } from '@/lib/ai/extract';
 import {
   evaluateDish,
-  extractDishNames,
   summarizeFoodCheck,
   type AllergenReference,
 } from '@/lib/algorithms/food-safety';

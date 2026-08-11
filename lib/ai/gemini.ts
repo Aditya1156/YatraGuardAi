@@ -109,6 +109,15 @@ async function callGemini(request: GeminiRequest, attempt = 0): Promise<string> 
     if (response.status === 400 || response.status === 403) {
       throw new AppError('The AI service rejected the request — check GEMINI_API_KEY.', 502, 'AI_AUTH');
     }
+    if (response.status === 404) {
+      // Google retires model ids periodically; say so plainly instead of
+      // leaving someone to guess why a working app stopped working.
+      throw new AppError(
+        `The AI model "${model}" is not available on this key. Set GEMINI_MODEL to a current one — list them with: curl "https://generativelanguage.googleapis.com/v1beta/models" -H "x-goog-api-key: $GEMINI_API_KEY"`,
+        502,
+        'AI_MODEL_GONE',
+      );
+    }
     throw new AppError('The AI service is unavailable right now.', 502, 'AI_ERROR');
   }
 

@@ -13,7 +13,11 @@
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
     "seed": "tsx scripts/seed.ts",
-    "check": "npm run typecheck && npm run lint"
+    "check": "npm run typecheck && npm run lint",
+    "demo": "node scripts/demo/run-demo.mjs",
+    "demo:algorithms": "tsx scripts/demo/run-algorithms.ts",
+    "demo:fixtures": "node scripts/demo/make-fixtures.mjs",
+    "icons": "node scripts/generate-icons.mjs"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.4",

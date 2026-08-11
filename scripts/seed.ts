@@ -8,7 +8,9 @@
  *   npm run seed
  */
 
-import 'dotenv/config';
+// Must come first — it populates process.env before lib/config reads it.
+import './load-env';
+
 import mongoose from 'mongoose';
 import { PILOT_CITY } from '../lib/config';
 import { connectToDatabase } from '../lib/db/mongoose';

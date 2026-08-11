@@ -94,7 +94,7 @@ a stale price or scam verdict would be worse than no answer, so those always hit
 
 ## How it is laid out
 
-```
+```text
 app/
   (app)/          authenticated screens — dashboard, scan, scam, routes, food, sos, profile, discover
   api/            Section 7 route map; every route answers { ok: true, data } | { ok: false, error }
@@ -117,6 +117,35 @@ scripts/          seed and icon generation
 The algorithms are deliberately separated from the routes: scoring, matching and risk assessment are
 pure functions, so they can be reasoned about (and tested) without a database or an API key.
 
+## Demos
+
+Two, because they prove different things.
+
+```bash
+npm run demo:algorithms      # no keys needed
+```
+
+Drives `lib/algorithms` directly with the exact output the OCR step produces:
+fuzzy matching against OCR noise, the deviation curve, the running median
+resisting an outlier, allergen conflicts, fastest-vs-safest route scoring, the
+SOS message, and off-peak suggestions. The AI only ever turns a photo into text
+— every judgement after that is deterministic code, and this shows it working
+without a key.
+
+```bash
+npm run build && npx next start -p 3111
+npm run demo -- http://localhost:3111
+```
+
+Walks a real user journey over HTTP against a running server: sign in, scan a
+bill, check messages, set allergens, scan a menu, add a contact, fire SOS, read
+the city feed. Steps that need Gemini report as `SKIPPED` with the reason rather
+than aborting, so the script is also a useful diagnostic on a half-configured
+deployment.
+
+Both use the fixtures in `scripts/demo/fixtures/` — a bill and a menu rendered
+by `npm run demo:fixtures`.
+
 ## Commands
 
 | Command | What it does |
@@ -125,7 +154,23 @@ pure functions, so they can be reasoned about (and tested) without a database or
 | `npm run build` | Production build |
 | `npm run seed` | Load Bengaluru reference data |
 | `npm run check` | Typecheck + lint |
-| `node scripts/generate-icons.mjs` | Regenerate the PWA icons |
+| `npm run demo:algorithms` | Scoring walkthrough, no keys required |
+| `npm run demo` | End-to-end HTTP walkthrough |
+| `npm run icons` | Regenerate the PWA icons |
+
+### A note on the Gemini model id
+
+`GEMINI_MODEL` is pinned in `.env.example`, and it will go stale — Google
+retires model ids on a schedule, and the `gemini-2.0-flash` this project was
+originally specified against is already gone. If the AI modules start returning
+`AI_MODEL_GONE`, list what your key can actually reach and update the variable:
+
+```bash
+curl "https://generativelanguage.googleapis.com/v1beta/models" \
+  -H "x-goog-api-key: $GEMINI_API_KEY"
+```
+
+`gemini-flash-latest` is the auto-updating alias if you would rather not pin.
 
 ---
 

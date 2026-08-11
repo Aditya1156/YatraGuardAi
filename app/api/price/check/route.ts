@@ -5,8 +5,8 @@ import { readImageFromRequest } from '@/lib/api/upload';
 import { requireSessionUser } from '@/lib/auth/session';
 import { connectToDatabase } from '@/lib/db/mongoose';
 import { PriceCheckModel, PriceReferenceModel } from '@/lib/db/models';
+import { extractBillItems } from '@/lib/ai/extract';
 import {
-  extractBillItems,
   matchAndScoreItems,
   summarizeCheck,
   type ReferencePrice,
