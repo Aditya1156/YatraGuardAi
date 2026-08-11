@@ -161,10 +161,12 @@ async function main() {
     },
   ];
 
-  await aiStep('classifying messages', async () => {
-    for (const message of messages) {
+  // Wrapped per message, not around the loop: one failure should not hide the
+  // verdicts for the others.
+  for (const message of messages) {
+    console.log(`\n  ${bold(message.label)}`);
+    await aiStep(`classifying "${message.label}"`, async () => {
       const result = await call('/api/scam/check', { method: 'POST', body: { text: message.text } });
-      console.log(`\n  ${bold(message.label)}`);
       console.log(`  ${ring(result.score, result.verdict)}`);
       console.log(
         `  verdict     ${tone(result.verdict)(result.category)} (confidence ${Math.round(result.confidence * 100)}%)`,
@@ -172,8 +174,8 @@ async function main() {
       console.log(`  why         ${result.explanation}`);
       if (result.signals.length) console.log(`  signals     ${result.signals.join(' · ')}`);
       console.log(`  do          ${result.recommendedAction}`);
-    }
-  });
+    });
+  }
 
   /* ---------------------------------------------------------------- */
   heading(5, 'Menu check — 8.4');
@@ -229,7 +231,10 @@ async function main() {
   heading(7, 'City scam feed — 8.2');
   const alerts = await call('/api/scam/alerts');
   for (const alert of alerts.alerts) {
-    console.log(`  ${tone(alert.category === 'scam' ? 'risk' : 'caution')('●')} ${alert.pattern} ${dim(`(${alert.reportCount} report)`)}`);
+    const count = `${alert.reportCount} report${alert.reportCount === 1 ? '' : 's'}`;
+    console.log(
+      `  ${tone(alert.category === 'scam' ? 'risk' : 'caution')('●')} ${alert.pattern} ${dim(`(${count})`)}`,
+    );
   }
 
   /* ---------------------------------------------------------------- */

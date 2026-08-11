@@ -6,6 +6,7 @@ import {
   buildResult,
   applyRules,
   classificationSchema,
+  patternKey,
 } from '@/lib/algorithms/scam-detector';
 import type { ExtractedItem } from '@/lib/algorithms/price-fairness';
 import type { ScamCheckResult } from '@/types';
@@ -119,7 +120,7 @@ traveller would understand. Never tell the user to comply with the message.`;
 
 export async function classifyMessage(
   text: string,
-): Promise<{ result: ScamCheckResult; pattern: string }> {
+): Promise<{ result: ScamCheckResult; pattern: string; patternKey: string }> {
   // The local rule pass runs regardless of what the model says, and can
   // override a soft verdict upward (see buildResult).
   const ruleHits = applyRules(text);
@@ -137,10 +138,16 @@ Message:
 ${text.slice(0, 4000)}
 """`,
       temperature: 0.1,
-      maxOutputTokens: 512,
     },
     classificationSchema,
   );
 
-  return { result: buildResult(classification, ruleHits), pattern: classification.pattern };
+  return {
+    result: buildResult(classification, ruleHits),
+    pattern: classification.pattern,
+    patternKey: patternKey(
+      classification.pattern,
+      ruleHits.map((hit) => hit.id),
+    ),
+  };
 }

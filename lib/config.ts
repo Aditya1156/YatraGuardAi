@@ -32,13 +32,20 @@ export const serverEnv = {
 
   geminiApiKey: read('GEMINI_API_KEY'),
   /**
-   * Pinned deliberately. Google retires model ids on a schedule — the original
-   * `gemini-2.0-flash` this project was specified against is already gone — so
-   * the id lives in one place and the failure is a clear message rather than a
-   * mystery 404. `gemini-flash-latest` is the auto-updating alias if you would
-   * rather not pin.
+   * Pinned deliberately, and to a *lite* model on purpose.
+   *
+   * Google retires model ids on a schedule — the `gemini-2.0-flash` this
+   * project was specified against is already gone, and `gemini-2.5-flash` is
+   * closed to new API projects — so the id lives in one place and a 404 gives a
+   * clear message instead of a mystery.
+   *
+   * Lite because free-tier quota is per-model and the full flash models are
+   * capped at 20 requests/day, which one demo run of five AI calls exhausts in
+   * four passes. On this workload — reading a printed bill or menu, classifying
+   * a message — flash-lite returned byte-identical extractions to
+   * gemini-3.6-flash, so the larger model buys nothing but a smaller quota.
    */
-  geminiModel: read('GEMINI_MODEL') ?? 'gemini-2.5-flash',
+  geminiModel: read('GEMINI_MODEL') ?? 'gemini-3.1-flash-lite',
 
   openRouteServiceKey: read('OPENROUTESERVICE_API_KEY'),
 

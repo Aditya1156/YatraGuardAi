@@ -116,7 +116,25 @@ export function buildResult(
   };
 }
 
-/** Normalised grouping key so repeat reports roll into one city alert. */
-export function patternKey(pattern: string): string {
+/**
+ * Deterministic grouping key so repeat reports roll into one city alert.
+ *
+ * This deliberately does not key on the model's `pattern` label. That label is
+ * free text regenerated per call, and the same fake-KYC message came back as
+ * "Fake Bank KYC Phishing Scam", "Fake Bank KYC Expiry Scam" and "Fake bank KYC
+ * update scam" across three runs — so grouping on it produced three separate
+ * one-report alerts and the feed could never show a repeat, which is the entire
+ * point of 8.2 step 4.
+ *
+ * The local rule ids are stable, so they key the group whenever any fired.
+ * `urgency` is excluded as an identifier: nearly every scam is urgent, so it
+ * describes tone rather than type and would merge unrelated scams into one
+ * bucket. The normalised label remains the fallback for a message the rules
+ * missed entirely.
+ */
+export function patternKey(pattern: string, ruleIds: readonly string[] = []): string {
+  const identifying = Array.from(new Set(ruleIds)).filter((id) => id !== 'urgency').sort();
+  if (identifying.length > 0) return identifying.join('+');
+
   return pattern.toLowerCase().replace(/[^a-z0-9\s]/g, '').replace(/\s+/g, ' ').trim();
 }

@@ -66,7 +66,13 @@ async function callGemini(request: GeminiRequest, attempt = 0): Promise<string> 
           // Always ask for JSON so parsing never depends on prose formatting.
           responseMimeType: 'application/json',
           temperature: request.temperature ?? 0.1,
-          maxOutputTokens: request.maxOutputTokens ?? 2048,
+          // Current flash models are thinking models, and reasoning tokens are
+          // charged against maxOutputTokens before a single character of JSON
+          // is emitted — a 512 budget was spending 484 on thought and
+          // truncating the answer mid-object. Thinking cannot be switched off
+          // on all of them (gemini-3.6-flash rejects thinkingBudget: 0 with a
+          // 400), so the budget is simply kept well clear of the ceiling.
+          maxOutputTokens: Math.max(request.maxOutputTokens ?? 0, 4096),
         },
         safetySettings: [
           // Scam messages quote abusive text; blocking them would break the
@@ -127,7 +133,20 @@ async function callGemini(request: GeminiRequest, attempt = 0): Promise<string> 
     throw new AppError('The AI declined to analyse that content.', 422, 'AI_BLOCKED');
   }
 
-  const text = body.candidates?.[0]?.content?.parts?.map((p) => p.text ?? '').join('') ?? '';
+  const candidate = body.candidates?.[0];
+
+  // Catch truncation here rather than letting it surface downstream as an
+  // unexplained JSON parse failure — the output is cut mid-object, so the
+  // parser's complaint points at the wrong thing entirely.
+  if (candidate?.finishReason === 'MAX_TOKENS') {
+    throw new AppError(
+      'The AI ran out of room before it finished answering. Try a photo with fewer items.',
+      502,
+      'AI_TRUNCATED',
+    );
+  }
+
+  const text = candidate?.content?.parts?.map((p) => p.text ?? '').join('') ?? '';
   if (!text.trim()) {
     throw new AppError('The AI returned an empty result. Try again.', 502, 'AI_EMPTY');
   }

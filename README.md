@@ -158,19 +158,33 @@ by `npm run demo:fixtures`.
 | `npm run demo` | End-to-end HTTP walkthrough |
 | `npm run icons` | Regenerate the PWA icons |
 
-### A note on the Gemini model id
+### Choosing the Gemini model
 
-`GEMINI_MODEL` is pinned in `.env.example`, and it will go stale — Google
-retires model ids on a schedule, and the `gemini-2.0-flash` this project was
-originally specified against is already gone. If the AI modules start returning
-`AI_MODEL_GONE`, list what your key can actually reach and update the variable:
+`GEMINI_MODEL` is pinned, and the default is a **lite** model on purpose.
+
+Free-tier quota is counted per model, and the full flash models allow only
+**20 requests per day**. One `npm run demo` costs five AI calls (one bill, three
+messages, one menu), so four passes exhaust the day. On this workload — reading
+printed text, classifying a message — `gemini-3.1-flash-lite` returned
+byte-identical extractions to `gemini-3.6-flash`, so the bigger model buys
+nothing here except a smaller allowance.
+
+Model ids also go stale: `gemini-2.0-flash`, which the master prompt specifies,
+has been retired, and `gemini-2.5-flash` is closed to new API projects. If a
+module returns `AI_MODEL_GONE`, list what your key can actually reach:
 
 ```bash
 curl "https://generativelanguage.googleapis.com/v1beta/models" \
   -H "x-goog-api-key: $GEMINI_API_KEY"
 ```
 
-`gemini-flash-latest` is the auto-updating alias if you would rather not pin.
+Two other AI failures have named codes worth recognising:
+
+| Code | Means |
+|---|---|
+| `AI_MODEL_GONE` | The pinned model id no longer exists for your key. |
+| `AI_TRUNCATED` | The answer was cut off mid-JSON. Current flash models are *thinking* models and reasoning tokens are charged against `maxOutputTokens` before any output is emitted, so the budget must stay well clear of the ceiling. Thinking cannot always be disabled — `gemini-3.6-flash` rejects `thinkingBudget: 0` with a 400. |
+| `AI_QUOTA` | Free-tier requests for the day are used up on that model. |
 
 ---
 

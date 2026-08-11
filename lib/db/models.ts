@@ -112,8 +112,11 @@ const scamReportSchema = new Schema(
     score: { type: Number, required: true, min: 0, max: 100 },
     explanation: { type: String, required: true },
     signals: { type: [String], default: [] },
-    /** Short human-readable label used to group repeat reports into alerts. */
+    /** Short human-readable label shown on the alert card. Model-generated, so
+     * the exact wording varies between reports of the same scam. */
     pattern: { type: String, required: true, index: true },
+    /** Deterministic key the alert feed groups on — see patternKey(). */
+    patternKey: { type: String, required: true, index: true },
   },
   timestamps,
 );

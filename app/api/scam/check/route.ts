@@ -22,7 +22,7 @@ export const POST = route(async (request: Request): Promise<NextResponse> => {
   enforceRateLimit({ key: `scam:${user.id}`, ...LIMITS.ai });
 
   const { text } = bodySchema.parse(await request.json());
-  const { result, pattern } = await classifyMessage(text);
+  const { result, pattern, patternKey } = await classifyMessage(text);
 
   // Only suspicious/scam verdicts are kept — a safe message is not evidence of
   // anything, and storing every pasted text would be needless data collection.
@@ -38,6 +38,7 @@ export const POST = route(async (request: Request): Promise<NextResponse> => {
       explanation: result.explanation,
       signals: result.signals,
       pattern,
+      patternKey,
     });
     result.id = String(saved._id);
   }

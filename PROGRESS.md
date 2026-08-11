@@ -4,6 +4,71 @@ Running log, per Section 0 of `PROJECT_MASTER_PROMPT.md`. Newest session at the 
 
 ---
 
+## Session 3 — the AI modules run end to end
+
+A second Gemini key was supplied and it works. **All four core modules now run
+on real data**, which is the Week 3 Definition of Done.
+
+### Correction: this key is free tier, not paid
+
+Session 2 recorded a deliberate move to a paid tier. That was based on the first
+key, which never worked. The replacement key reports
+`generate_content_free_tier_requests`, so **the ₹0 constraint in Section 2 still
+holds** and nothing in this project currently needs a card.
+
+### Free-tier quota is per model, and it is small
+
+The full flash models allow **20 requests per day**. One `npm run demo` costs
+five AI calls, so four passes exhausted it mid-session.
+
+`GEMINI_MODEL` therefore defaults to `gemini-3.1-flash-lite`, which has its own
+much larger allowance. This is not a downgrade for this workload: on the bill
+fixture, flash-lite returned a byte-identical extraction to `gemini-3.6-flash`,
+unit prices and all. Reading printed text does not need the bigger model.
+
+Model availability also keeps moving. `gemini-2.0-flash` (the master prompt's
+choice) is retired, and `gemini-2.5-flash` now refuses new API projects with a
+404 saying it is "no longer available to new users".
+
+### Verified working against the real API
+
+- **8.1 Price** — read the bill fixture correctly, including the instruction to
+  report *unit* rather than line-total prices (₹150, not ₹300). Scored 33/100,
+  ₹210 over, matching the offline algorithm demo exactly.
+- **8.2 Scam** — both scam messages caught (15/100 and 17/100), and the genuine
+  Swiggy notification correctly cleared at 89/100.
+- **8.4 Food** — 12 of 15 menu dishes flagged against a peanut/dairy profile.
+
+### Bugs found and fixed
+
+1. **Thinking tokens were truncating every structured response.** Current flash
+   models are thinking models, and reasoning tokens are charged against
+   `maxOutputTokens` *before* any output. The scam call capped it at 512 and was
+   spending 484 on thought, cutting the JSON mid-object — which surfaced as a
+   misleading "response could not be read" parse error. Thinking cannot simply
+   be switched off (`gemini-3.6-flash` rejects `thinkingBudget: 0` with a 400),
+   so the floor is now 4096 and a `MAX_TOKENS` finish reason raises a named
+   `AI_TRUNCATED` error instead of blaming the parser.
+2. **The city scam feed never grouped anything.** 8.2 step 4 exists to surface
+   *repeated* patterns, but the aggregation grouped on the model's free-text
+   label — and the same fake-KYC message came back as "Fake Bank KYC Phishing
+   Scam", "Fake Bank KYC Expiry Scam" and "Fake bank KYC update scam" across
+   runs. Every report became its own one-report alert, so the feature was dead
+   on arrival while looking fine. Reports now store a deterministic
+   `patternKey` derived from the local rule ids, which do not vary. Verified:
+   three reports of the same scam under two different model labels now roll into
+   a single alert reading "3 reports".
+
+### Still open
+
+- [ ] **OpenRouteService key** — the last unconfigured integration, and the only
+      module never exercised against a live API. The risk scoring it feeds is
+      verified; the directions call is not.
+- [ ] **Firebase** — guest sign-in carries the demo; real sign-in needs it.
+- [ ] Rotate both Gemini keys — they were pasted into a chat transcript.
+
+---
+
 ## Session 2 — first real run, three bugs found and fixed
 
 ### Constraint change: paid Gemini tier `[TEAM DECISION]`

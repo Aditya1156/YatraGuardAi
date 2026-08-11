@@ -5,7 +5,6 @@ import { LIMITS, enforceRateLimit } from '@/lib/api/rate-limit';
 import { requireSessionUser } from '@/lib/auth/session';
 import { connectToDatabase } from '@/lib/db/mongoose';
 import { ScamReportModel } from '@/lib/db/models';
-import { patternKey } from '@/lib/algorithms/scam-detector';
 import type { ScamAlert, ScamCategory } from '@/types';
 
 export const runtime = 'nodejs';
@@ -46,7 +45,10 @@ export const GET = route(async (request: Request): Promise<NextResponse> => {
     { $sort: { createdAt: -1 } },
     {
       $group: {
-        _id: { $toLower: '$pattern' },
+        // Group on the deterministic key, not the model's prose label — see
+        // patternKey(). $ifNull keeps reports written before the key existed
+        // from vanishing out of the feed.
+        _id: { $ifNull: ['$patternKey', { $toLower: '$pattern' }] },
         count: { $sum: 1 },
         lastSeen: { $max: '$createdAt' },
         category: { $first: '$category' },
@@ -61,7 +63,7 @@ export const GET = route(async (request: Request): Promise<NextResponse> => {
   ]);
 
   const alerts: ScamAlert[] = rows.map((row) => ({
-    id: patternKey(row._id),
+    id: row._id,
     city,
     pattern: row.pattern,
     category: row.category,
