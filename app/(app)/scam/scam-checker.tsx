@@ -102,7 +102,7 @@ function ScamResult({ result }: { result: ScamCheckResult }) {
       <div className="flex flex-col items-center rounded-card bg-surface px-4 py-6 shadow-card">
         <TrustRing score={result.score} size="lg" />
         <h2 className="mt-4 text-lg">{heading}</h2>
-        <p className="mt-1.5 text-pretty text-center text-sm text-muted-foreground">
+        <p className="fab-safe mt-1.5 text-pretty text-center text-sm text-muted-foreground">
           {result.explanation}
         </p>
       </div>

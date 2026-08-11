@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
-import Link from 'next/link';
 import { ShieldAlert } from 'lucide-react';
 import { BottomNav } from '@/components/app-shell/bottom-nav';
+import { SosFab } from '@/components/app-shell/sos-fab';
 import { getSessionUser } from '@/lib/auth/session';
 import { ConfigError } from '@/lib/config';
 
@@ -42,14 +42,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         {children}
       </main>
       <BottomNav />
-      <Link
-        href="/sos"
-        aria-label="Emergency SOS"
-        className="fixed bottom-24 right-4 z-40 grid size-14 place-items-center rounded-full bg-signal-red text-sm font-bold text-white shadow-card-hover transition-transform active:scale-95"
-        style={{ marginBottom: 'var(--safe-area-bottom)' }}
-      >
-        SOS
-      </Link>
+      <SosFab />
     </div>
   );
 }

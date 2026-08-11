@@ -83,7 +83,7 @@ function FoodResult({ result }: { result: FoodCheckResult }) {
     <section className="flex flex-col gap-5" aria-live="polite">
       <div className="flex flex-col items-center rounded-card bg-surface px-4 py-6 shadow-card">
         <TrustRing score={result.score} size="lg" />
-        <p className="mt-4 text-pretty text-center text-sm text-muted-foreground">{result.summary}</p>
+        <p className="fab-safe mt-4 text-pretty text-center text-sm text-muted-foreground">{result.summary}</p>
       </div>
 
       {flagged.length > 0 && (

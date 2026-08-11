@@ -88,7 +88,7 @@ function PriceResult({ result, city }: { result: PriceCheckResult; city: string 
     <section className="flex flex-col gap-5" aria-live="polite">
       <div className="flex flex-col items-center rounded-card bg-surface px-4 py-6 shadow-card">
         <TrustRing score={result.score} size="lg" />
-        <p className="mt-4 text-pretty text-center text-sm text-muted-foreground">
+        <p className="fab-safe mt-4 text-pretty text-center text-sm text-muted-foreground">
           {result.summary}
         </p>
 

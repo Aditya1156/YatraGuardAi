@@ -88,3 +88,14 @@
 .leaflet-control-attribution {
   @apply !bg-canvas/80 !text-[10px] !text-muted-foreground;
 }
+
+/**
+ * The floating SOS control owns a fixed ~72px column at the right edge of the
+ * viewport, so anything beneath it is covered at some scroll position. It
+ * yields while the user scrolls (see SosFab), but at rest it was landing on
+ * the one sentence that carries the verdict. Centred summary text gets a
+ * symmetric inset so it stays clear of that column at any scroll position.
+ */
+.fab-safe {
+  padding-inline: 3rem;
+}
