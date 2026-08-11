@@ -57,6 +57,22 @@ a guarantee.
   `configured` so an unset optional key cannot make a working deployment report
   itself as not ready.
 
+### Two rules added, from watching the feed
+
+A full demo run showed the same off-platform booking scam split across two
+alerts. The grouping fix from session 3 only produces a stable key when a local
+rule fires, and no rule covered *"pay this personal UPI id directly"* — which is
+the single most common way a traveller loses a booking deposit in India, so its
+absence was a real gap and not just a grouping artefact.
+
+- `transfer` — a payment verb near a UPI handle, VPA, IFSC or account number
+- `offplatform` — the "our payment gateway is down" pretext that justifies it
+
+Checked against genuine messages as well as scams: neither rule fires on a
+Swiggy delivery update, a bank debit alert, or a hotel confirmation saying "pay
+at the property on arrival". Four demo runs now produce two alerts of four
+reports each, with no fragmentation.
+
 ### Still open
 
 - [ ] **OpenRouteService key** — 8.3 remains the one module never run against a

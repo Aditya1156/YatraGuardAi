@@ -41,6 +41,11 @@ const RULES: Rule[] = [
   { id: 'fee', label: 'Advance fee to release something', test: /\b(customs|clearance|processing|registration|security)\s?(fee|charge|deposit)\b/i, weight: 2 },
   { id: 'link', label: 'Shortened or lookalike link', test: /(bit\.ly|tinyurl|t\.me|is\.gd|rb\.gy|cutt\.ly|[a-z0-9-]+\.(?:xyz|top|club|online|shop)\b)/i, weight: 2 },
   { id: 'refund', label: 'UPI "refund" that collects money', test: /\b(refund|cashback)\b.{0,40}\b(upi|scan|qr|collect request|approve)\b/i, weight: 3 },
+  // Paying a personal UPI handle or bank account instead of a platform is the
+  // single most common way travellers lose a booking deposit here.
+  { id: 'transfer', label: 'Pay a personal UPI or bank account', test: /\b(transfer|send|pay|deposit|advance)\b.{0,60}\b(upi\s?id|vpa|ifsc|account\s?(?:no\.?|number)|@(?:okaxis|oksbi|okhdfcbank|okicici|ybl|paytm|apl|axl))/i, weight: 3 },
+  // The pretext that justifies going off-platform in the first place.
+  { id: 'offplatform', label: 'Claims the official payment channel is down', test: /\b(payment\s?(gateway|link|portal)|booking\s?(site|portal)|website)\b.{0,30}\b(down|not working|under maintenance|failed|unavailable)\b/i, weight: 2 },
   { id: 'authority', label: 'Impersonates an authority', test: /\b(police|cyber cell|income tax|trai|customs officer|court notice|arrest)\b/i, weight: 2 },
   { id: 'job', label: 'Work-from-home / task job bait', test: /\b(work from home|part[-\s]?time job|daily (income|earning)|task (based )?job)\b/i, weight: 2 },
   { id: 'contact', label: 'Pushes you to WhatsApp/Telegram', test: /\b(whatsapp|telegram)\b.{0,30}\b(\+?\d[\d\s-]{7,})/i, weight: 1 },
