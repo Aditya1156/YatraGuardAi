@@ -1,0 +1,90 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Section 4 colour tokens, expressed as HSL channels for Tailwind. */
+    --ink: 217 22% 10%; /* #14181F */
+    --canvas: 0 0% 100%; /* #FFFFFF */
+    --surface: 60 9% 96%; /* #F7F7F5 */
+    --trust-indigo: 219 46% 20%; /* #1B2A4A */
+    --marigold: 35 88% 59%; /* #F2A93B */
+    --signal-green: 167 50% 36%; /* #2E8B74 */
+    --signal-red: 0 63% 55%; /* #D64545 */
+
+    --muted: 60 9% 92%;
+    --muted-foreground: 217 10% 42%;
+    --border: 60 6% 88%;
+    --focus-ring: 219 46% 20%;
+
+    --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    @apply bg-canvas font-sans text-ink antialiased;
+    /* Keep the installed PWA from rubber-banding like a web page. */
+    overscroll-behavior-y: none;
+  }
+
+  /* Numerals in scanned data, prices and scores read as "verified" (Section 4). */
+  .numeric {
+    @apply font-mono tabular-nums tracking-tight;
+  }
+
+  h1,
+  h2,
+  h3 {
+    @apply font-display font-semibold tracking-tight;
+  }
+
+  :focus-visible {
+    @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-canvas;
+  }
+
+  /* Section 4: motion is one deliberate load-in, and it must be opt-out-able. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@layer components {
+  .card-surface {
+    @apply rounded-card bg-surface shadow-card;
+  }
+
+  .skeleton {
+    @apply relative overflow-hidden rounded-md bg-muted;
+  }
+
+  .skeleton::after {
+    @apply absolute inset-0 animate-shimmer bg-gradient-to-r from-transparent via-white/60 to-transparent;
+    content: '';
+    transform: translateX(-100%);
+  }
+}
+
+/* Leaflet renders its own controls; align them with the token system. */
+.leaflet-container {
+  @apply font-sans;
+  background: hsl(var(--surface));
+}
+
+.leaflet-control-attribution {
+  @apply !bg-canvas/80 !text-[10px] !text-muted-foreground;
+}

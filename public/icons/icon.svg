@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="YatraGuard AI">
+  <rect width="512" height="512" rx="112" fill="#1B2A4A" />
+  <circle cx="256" cy="256" r="150" fill="none" stroke="#FFFFFF" stroke-opacity="0.16" stroke-width="34" />
+  <!-- Trust Ring at ~78: the arc sweeps from the top, clockwise. -->
+  <circle
+    cx="256"
+    cy="256"
+    r="150"
+    fill="none"
+    stroke="#2E8B74"
+    stroke-width="34"
+    stroke-linecap="round"
+    stroke-dasharray="735 943"
+    transform="rotate(-90 256 256)"
+  />
+  <path
+    d="M256 176c34 18 56 22 74 22v58c0 46-30 74-74 92-44-18-74-46-74-92v-58c18 0 40-4 74-22z"
+    fill="#F2A93B"
+  />
+</svg>

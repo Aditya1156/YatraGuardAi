@@ -1,0 +1,44 @@
+{
+  "name": "YatraGuard AI",
+  "short_name": "YatraGuard",
+  "description": "Check a bill, a message, a route or a menu before it costs you. Built for travellers in Bengaluru.",
+  "start_url": "/dashboard",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#FFFFFF",
+  "theme_color": "#1B2A4A",
+  "lang": "en-IN",
+  "categories": ["travel", "utilities", "safety"],
+  "icons": [
+    {
+      "src": "/icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    { "name": "Scan a bill", "url": "/scan", "description": "Check whether a bill is fairly priced" },
+    { "name": "Check a message", "url": "/scam", "description": "Classify a suspicious message" },
+    { "name": "Emergency SOS", "url": "/sos", "description": "Send your location to trusted contacts" }
+  ]
+}
